@@ -182,7 +182,7 @@ bool Consistent(int, int, int, Board);
 string ForwardChecking(Board);
 string RecursiveForwardChecking(Board, Board);
 bool FCConsistent(int, int, int, Board);
-bool HasRemainingValues(int, int, Board)
+bool HasRemainingValues(int, int, Board);
 
 long checks=0;
 
