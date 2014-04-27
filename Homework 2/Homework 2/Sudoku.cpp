@@ -133,23 +133,6 @@ bool Board::checkForVictory() {
 	return true;
 }
 
-//bool Board::SelectUnassignedCell(int &row, int &col)
-//{
-//	for(int i=1; i<=this->get_dim(); i++)
-//		for(int j=1; j<=this->get_dim(); j++)
-//		{
-//			//int sq = this->get_square_value(i,j);
-//			if (this->get_square_value(i,j)==0)
-//			{
-//				row=i;
-//				col=j;
-//				return true;
-//			}
-//		}
-//	return false;
-//}
-
-
 void testBasics() {
 	Board * b = new Board(4);
 	b->set_square_value(1, 1, 1);
@@ -189,7 +172,7 @@ long checks=0;
 int main(int argc, char* argv[])
 {
 	checks=0;
-	Board * b = Board::fromFile("4x4.txt");
+	Board * b = Board::fromFile("25x25.txt");
 	//cout<<"Solution:"<<endl<<Backtracking(*b)<<endl;
 	cout<<"Solution:"<<endl<<ForwardChecking(*b)<<endl;
 	cout<<"Consistency checks: "<<checks<<endl;
@@ -208,7 +191,7 @@ string RecursiveBackTracking(Board assignment, Board c)
 {
 	int row=1;
 	int col=1;
-	//cout<<assignment.toString();
+	//cout<<assignment.toString()<<endl;
 	
 	string failure = "Failed to solve";
 	if(assignment.checkForVictory())
@@ -296,8 +279,6 @@ string RecursiveForwardChecking(Board assignment, Board c)
 	string failure = "Failed to solve";
 	if(assignment.checkForVictory())
 		return assignment.toString();
-	/*if(!assignment.SelectUnassignedCell(row, col))
-		return "No more unassigned cells.";*/
 	if(!SelectUnassignedCell(assignment, row, col))
 		return "No more unassigned cells.";
 	//cout<<"Selected cell: row = "<<row<<" col = "<<col<<endl;
@@ -309,7 +290,7 @@ string RecursiveForwardChecking(Board assignment, Board c)
 		{
 			assignment.set_square_value(row, col, i);//add to assignment
 			cout<<checks<<endl;
-			string result = RecursiveBackTracking(assignment, c);
+			string result = RecursiveForwardChecking(assignment, c);
 			if (result!=failure)
 				return assignment.toString();
 			assignment.set_square_value(row, col, 0);//remove from assignment
@@ -323,8 +304,8 @@ string RecursiveForwardChecking(Board assignment, Board c)
 bool FCConsistent(int row, int col, int i, Board assignment)
 {
 		
-	//cout<<"here\n"<<assignment.toString();
 	checks++;
+	//first check if value is consistent with existing assignments
 	//check row
 	//cout<<"checking row\n";
 	for(int j=1; j<=assignment.get_dim(); j++)
@@ -341,37 +322,104 @@ bool FCConsistent(int row, int col, int i, Board assignment)
 	for(int k=1+ceil((double)row/d-1)*d; k<1+ceil((double)row/d-1)*d+d; k++)
 		for(int j=1+ceil((double)col/d-1)*d; j<1+ceil((double)col/d-1)*d+d; j++)
 		{
-			//cout<<"checking position: "<<k<<", "<<j<<endl;
 			if (!(k==row && j==col))
 				if(assignment.get_square_value(k, j)==i)
 					return false;
 		}
+	//now check consistency with forward checking
+	//assignment.set_square_value(row, col, i);//add to assignment
+	//check row
+	//cout<<"achecking row\n";
+	for(int j=1; j<=assignment.get_dim(); j++)
+		if(assignment.get_square_value(row,j)==0)
+			if(!HasRemainingValues(row, j, assignment))
+				return false;
+	//check column
+		//cout<<"achecking column\n";
+	for(int j=1; j<=assignment.get_dim(); j++)
+		if(assignment.get_square_value(j, col)==0)
+			if(!HasRemainingValues(j, col, assignment))
+				return false;
+	//check small square
+		//cout<<"achecking square\n";
+	for(int k=1+ceil((double)row/d-1)*d; k<1+ceil((double)row/d-1)*d+d; k++)
+		for(int j=1+ceil((double)col/d-1)*d; j<1+ceil((double)col/d-1)*d+d; j++)
+		{
+			if (!(k==row && j==col))
+				if(assignment.get_square_value(k, j)==0)
+					if(!HasRemainingValues(k, j, assignment))
+						return false;
+		}
+	//assignment.set_square_value(row, col, 0);//remove from assignment
 	return true;
 }
 
 bool HasRemainingValues(int row, int col, Board assignment)
 {
-	int numRemaining=assignment.get_dim();
+	//cout<<"\nRV check\n\n"<<assignment.toString()<<endl;
+	int numRemaining=0;
+	int remaining[25]={0};
+	for(int i=1; i<=assignment.get_dim(); i++)
+		remaining[i-1]=i;
+	bool nexti=false;
 	for(int i=1; i<=assignment.get_dim(); i++)
 	{
+		nexti=false;
 		//check row
-		for(int j=1; j<=assignment.get_dim(); j++)
-			if(assignment.get_square_value(row, j)==i)
-				numRemaining--;
+		if(!nexti)
+		{
+			for(int j=1; j<=assignment.get_dim(); j++)
+				if(assignment.get_square_value(row, j)==i)
+				{
+					//numRemaining--;
+					remaining[i-1]=0;
+					//cout<<"Row check hit at: "<<row<<", "<<j<<" with value: "<<i<<endl;
+					nexti=true;
+					break;
+				}
+		}
 		//check column
-		for(int j=1; j<=assignment.get_dim(); j++)
-			if(assignment.get_square_value(j, col)==i)
-				numRemaining--;
+		if(!nexti)
+		{
+			for(int j=1; j<=assignment.get_dim(); j++)
+				if(assignment.get_square_value(j, col)==i)
+				{
+					//numRemaining--;
+					remaining[i-1]=0;
+					//cout<<"Col check hit at: "<<j<<", "<<col<<" with value: "<<i<<endl;
+					nexti=true;
+					break;
+				}
+		}
 		//check small square
-		double d=sqrt(assignment.get_dim());
-		for(int k=1+ceil((double)row/d-1)*d; k<1+ceil((double)row/d-1)*d+d; k++)
-			for(int j=1+ceil((double)col/d-1)*d; j<1+ceil((double)col/d-1)*d+d; j++)
-			{
-				//cout<<"checking position: "<<k<<", "<<j<<endl;
-				if (!(k==row && j==col))
-					if(assignment.get_square_value(k, j)==i)
-						return false;
-			}
+		if(!nexti)
+		{
+			double d=sqrt(assignment.get_dim());
+			for(int k=1+ceil((double)row/d-1)*d; k<1+ceil((double)row/d-1)*d+d; k++)
+				for(int j=1+ceil((double)col/d-1)*d; j<1+ceil((double)col/d-1)*d+d; j++)
+				{
+					//cout<<"checking position: "<<k<<", "<<j<<endl;
+					if (!(k==row && j==col))
+						if(assignment.get_square_value(k, j)==i)
+						{
+							//numRemaining--;
+							remaining[i-1]=0;
+							//cout<<"Square check hit at: "<<k<<", "<<j<<" with value: "<<i<<endl;
+							nexti=true;
+							break;
+						}
+				}
+		}
+		else
+			continue;
 	}
-	return true;
+	numRemaining=0;
+	for(int i=1; i<=assignment.get_dim(); i++)
+		if(remaining[i-1]!=0)
+			numRemaining++;
+	//cout<<numRemaining<<" remaining values for: "<<row<<", "<<col<<endl;
+	if (numRemaining==0)
+		return false;
+	else
+		return true;
 }
