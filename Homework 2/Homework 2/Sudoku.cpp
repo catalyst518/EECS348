@@ -13,6 +13,7 @@ using namespace std;
 class Board {
 	int dim;
 	int ** cells;
+	int *** vars;
 	long totalChecks;
 public:
 	Board (int);
@@ -24,6 +25,8 @@ public:
 	bool checkForVictory();
 	//bool SelectUnassignedCell(int&, int&);
 	int get_dim() {return dim;}
+	void deleteVars(int, int, int);
+	bool MostRestrainedVariable(int&, int&);
 };
 
 Board::Board(int d) {
@@ -31,10 +34,17 @@ Board::Board(int d) {
 		throw ("Dimensions must be at most 62");
 	dim = d;
 	cells = new int*[dim];
+	vars = new int**[dim];
 	for(int i=0; i<dim;i++) {
 		cells[i] = new int[dim];
-		for(int j=0; j<dim;j++)
+		vars[i] = new int*[dim];
+		for (int j = 0; j < dim; j++){
 			cells[i][j] = 0;
+			vars[i][j] = new int[dim];
+			for (int k = 0; k < dim; k++){
+				vars[i][j][k] = k;
+			}
+		}
 	}
 	totalChecks = 0;
 }
@@ -60,8 +70,25 @@ string Board::toString() {
 	return s.str();
 }
 
+void Board::deleteVars(int c, int row, int col){
+	if (col == 0){ return; }
+	int dimsqrt = (int)(sqrt((double)dim));
+	int rsq = row / dimsqrt;
+	int csq = col / dimsqrt;
+	for (int i = 0; i < get_dim(); i++)
+	{
+		//delete all instances in column
+		vars[i][col][c] = 0;
+		//delete all instances in row
+		vars[row][i][c] = 0;
+		//delete all instances in little box
+		vars[rsq*dimsqrt + i / dimsqrt][csq*dimsqrt + i%dimsqrt][c] = 0;
+	}
+}
+
 void Board::set_square_value(int row, int col, int val) {
 	cells[row-1][col-1] = val;
+	deleteVars(val, row - 1, col - 1);
 }
 
 int Board::get_square_value(int row, int col) {
@@ -92,6 +119,7 @@ Board * Board::fromFile(string inFileName) {
   inFile.close();
   return out;
 }
+
 
 bool Board::checkForVictory() {
 	unsigned long victory = 0;
@@ -133,22 +161,25 @@ bool Board::checkForVictory() {
 	return true;
 }
 
-//bool Board::SelectUnassignedCell(int &row, int &col)
-//{
-//	for(int i=1; i<=this->get_dim(); i++)
-//		for(int j=1; j<=this->get_dim(); j++)
-//		{
-//			//int sq = this->get_square_value(i,j);
-//			if (this->get_square_value(i,j)==0)
-//			{
-//				row=i;
-//				col=j;
-//				return true;
-//			}
-//		}
-//	return false;
-//}
-
+bool Board::MostRestrainedVariable(int& row, int& col)
+{
+	int worstCaseRemaining = 9;
+	for (int i = 0; i < get_dim(); i++)
+	{
+		for (int j = 0; j < get_dim(); j++)
+		{
+			int numOfAvailableVariables = 9;
+			for (int k = 0; k < get_dim(); k++)
+			{
+				if (vars[i][j][k] == 0){
+					numOfAvailableVariables--;
+				}
+			}
+			if (numOfAvailableVariables < worstCaseRemaining){ row = i; col = j; }
+		}
+	}
+	return false;
+}
 
 void testBasics() {
 	Board * b = new Board(4);
@@ -375,3 +406,6 @@ bool HasRemainingValues(int row, int col, Board assignment)
 	}
 	return true;
 }
+
+
+
