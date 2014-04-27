@@ -351,27 +351,27 @@ bool FCConsistent(int row, int col, int i, Board assignment)
 
 bool HasRemainingValues(int row, int col, Board assignment)
 {
-	int numRemaining = assignment.get_dim();
-	for (int i = 1; i <= assignment.get_dim(); i++)
+	int numRemaining=assignment.get_dim();
+	for(int i=1; i<=assignment.get_dim(); i++)
 	{
 		//check row
-		for (int j = 1; j <= assignment.get_dim(); j++)
-		if (assignment.get_square_value(row, j) == i)
-			numRemaining--;
+		for(int j=1; j<=assignment.get_dim(); j++)
+			if(assignment.get_square_value(row, j)==i)
+				numRemaining--;
 		//check column
-		for (int j = 1; j <= assignment.get_dim(); j++)
-		if (assignment.get_square_value(j, col) == i)
-			numRemaining--;
+		for(int j=1; j<=assignment.get_dim(); j++)
+			if(assignment.get_square_value(j, col)==i)
+				numRemaining--;
 		//check small square
-		double d = sqrt(assignment.get_dim());
-		for (int k = 1 + ceil((double)row / d - 1)*d; k < 1 + ceil((double)row / d - 1)*d + d; k++)
-		for (int j = 1 + ceil((double)col / d - 1)*d; j < 1 + ceil((double)col / d - 1)*d + d; j++)
-		{
-			//cout<<"checking position: "<<k<<", "<<j<<endl;
-			if (!(k == row && j == col))
-			if (assignment.get_square_value(k, j) == i)
-				return false;
-		}
+		double d=sqrt(assignment.get_dim());
+		for(int k=1+ceil((double)row/d-1)*d; k<1+ceil((double)row/d-1)*d+d; k++)
+			for(int j=1+ceil((double)col/d-1)*d; j<1+ceil((double)col/d-1)*d+d; j++)
+			{
+				//cout<<"checking position: "<<k<<", "<<j<<endl;
+				if (!(k==row && j==col))
+					if(assignment.get_square_value(k, j)==i)
+						return false;
+			}
 	}
-	return true;
+	return true
 }
