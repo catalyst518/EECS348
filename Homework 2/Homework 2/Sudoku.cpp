@@ -373,5 +373,5 @@ bool HasRemainingValues(int row, int col, Board assignment)
 						return false;
 			}
 	}
-	return true
+	return true;
 }
